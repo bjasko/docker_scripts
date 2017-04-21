@@ -31,8 +31,8 @@ docker run --name $DOCKER_CT -itd \
   -v $DOCKER_CT_VOLUME/lib:/var/lib/postgresql \
   -v $DOCKER_CT_VOLUME/etc:/etc/postgresql \
   -v $DOCKER_CT_VOLUME/log:/var/log/postgresql \
-  -e 'DB_USER=bringout' --env 'DB_PASS=bringout' \
-  -e 'PG_PASSWORD=boutpgmin' \
+  -e 'DB_USER=bringout' --env 'DB_PASS=password' \
+  -e 'PG_PASSWORD=password' \
   -p $DOCKER_PORT:5432 \
   $DOCKER_IMAGE
 
@@ -42,7 +42,7 @@ echo "kreiram xtrole grupu"
 docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "CREATE ROLE xtrole   NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;"
 
 echo "kreiram admin account"
-docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "CREATE USER admin WITH PASSWORD 'boutpgmin' SUPERUSER INHERIT CREATEDB CREATEROLE REPLICATION;"
+docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "CREATE USER admin WITH PASSWORD 'passwoed' SUPERUSER INHERIT CREATEDB CREATEROLE REPLICATION;"
 
 echo "ubacujem admina u xtrole grupu"
 docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "GRANT xtrole TO admin;"
