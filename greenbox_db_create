@@ -13,24 +13,40 @@ DOCKER_HOST=docker@$1
 DOCKER_CT=$2
 DOCKER_PORT=$3
 DOCKER_IMAGE=sameersbn/postgresql
+ZFS_DATASET=/data/postgresql
+DOCKER_CT_VOLUME=$ZFS_DATASET/$DOCKER_CT
+
 
 # izrši remote komande
+ssh  -p2222 $DOCKER_HOST << EOF
 
-ssh -p2222 $DOCKER_HOST << EOF
+# postoji li zfs dataset
+[ ! -d $ZFS_DATASET ] && sudo zfs create  -o mountpoint=$ZFS_DATASET green/postgresql
 
 # uvijek brišem stari CT
 docker rm -f $DOCKER_CT
 
 # kreiram CT
 docker run --name $DOCKER_CT -itd \
+  -v $DOCKER_CT_VOLUME/lib:/var/lib/postgresql \
+  -v $DOCKER_CT_VOLUME/etc:/etc/postgresql \
+  -v $DOCKER_CT_VOLUME/log:/var/log/postgresql \
   -e 'DB_USER=bringout' --env 'DB_PASS=bringout' \
+  -e 'PG_PASSWORD=boutpgmin' \
   -p $DOCKER_PORT:5432 \
   $DOCKER_IMAGE
 
-echo ""
-echo "Kreiran:"
-echo ""
-docker ps | grep $DOCKER_CT
+sleep 10
+# cekam da se psql podigne
+echo "kreiram xtrole grupu"
+docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "CREATE ROLE xtrole   NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;"
+
+echo "kreiram admin account"
+docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "CREATE USER admin WITH PASSWORD 'boutpgmin' SUPERUSER INHERIT CREATEDB CREATEROLE REPLICATION;"
+
+echo "ubacujem admina u xtrole grupu"
+docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "GRANT xtrole TO admin;"
+
 EOF
 
 exit
