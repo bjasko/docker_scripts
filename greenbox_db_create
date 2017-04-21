@@ -1,7 +1,14 @@
 #! /bin/bash
 
-# env vars
+# help
+if [ $# -lt 3 ]
+then
+  echo "argumenti su:   ./greenbox_db_create [DOCKER_HOST] [DOCKER_CT] [PORT]"
+  echo " npr:   ./greenbox_db_create greenbox-110.db.out.ba  F18-db-rudze-dobavljaci 54325"
+  exit 1
+fi
 
+# env vars
 DOCKER_HOST=docker@$1
 DOCKER_CT=$2
 DOCKER_PORT=$3
