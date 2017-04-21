@@ -1,0 +1,29 @@
+#! /bin/bash
+
+# env vars
+
+DOCKER_HOST=docker@$1
+DOCKER_CT=$2
+DOCKER_PORT=$3
+DOCKER_IMAGE=sameersbn/postgresql
+
+# izrši remote komande
+
+ssh -p2222 $DOCKER_HOST << EOF
+
+# uvijek brišem stari CT
+docker rm -f $DOCKER_CT
+
+# kreiram CT
+docker run --name $DOCKER_CT -itd \
+  -e 'DB_USER=bringout' --env 'DB_PASS=bringout' \
+  -p $DOCKER_PORT:5432 \
+  $DOCKER_IMAGE
+
+echo ""
+echo "Kreiran:"
+echo ""
+docker ps | grep $DOCKER_CT
+EOF
+
+exit
