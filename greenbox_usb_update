@@ -7,6 +7,11 @@ then
   exit 1
 fi
 
+if [ "$(id -u)" != "0" ]; then
+   echo "Pokreni kao root" 1>&2
+   exit 1
+fi
+
 GREEN_ISO=http://download.bring.out.ba/greenbox-$1.iso
 GREEN_CFG=/media/syslinux.cfg
 DEF_BOOT=`cat $GREEN_CFG | grep "^default boot" | awk '{print $2}'`
