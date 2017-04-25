@@ -60,6 +60,13 @@ else
   echo "kernel /boot/$1/vmlinuz64"  >> $GREEN_CFG
   echo "append initrd=/boot/$1/initrd.img loglevel=3 dockerpwd=test01 nozswap nofstab tz=CET-1CEST,M3.5.0,M10.5.0/3 noembed nomodeset norestore waitusb=10 LABEL=GREEN_HDD console=ttyS0,115200n8"  >> $GREEN_CFG
   echo ""  >> $GREEN_CFG
+fi
+
+if  [ "$DEF_BOOT" == "" ]; then
+  echo "$DEF_BOOT je prazan dodajem ga"
+  sed -i -e  sed -i '1s/^/default boot'"$1"'/'  $GREEN_CFG
+  sync
+else
   sed -i -e  's/default '"$DEF_BOOT"'/default boot'"$1"'/' $GREEN_CFG
   sync
 fi
