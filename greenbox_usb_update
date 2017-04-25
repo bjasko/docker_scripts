@@ -64,9 +64,9 @@ fi
 
 if  [ "$DEF_BOOT" == "" ]; then
   echo "$DEF_BOOT je prazan dodajem ga"
-  sed -i '3idefault boot'"$1"'/'  $GREEN_CFG
+  sed -i '3idefault boot'"$1"'\'  $GREEN_CFG
   sync
 else
-  sed -i -e  's/default '"$DEF_BOOT"'/default boot'"$1"'/' $GREEN_CFG
+  sed -i -e 's/default '"$DEF_BOOT"'/default boot'"$1"'/' $GREEN_CFG
   sync
 fi
