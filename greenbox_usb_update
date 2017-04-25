@@ -39,8 +39,8 @@ if [ -d "$BOOT_PATH/$1" ]; then
   exit
 else
   mkdir $BOOT_PATH/$1
-  cp -a $ISO_MNT/boot/initrd.img  $BOOT_PATH/$1
-  cp -a $ISO_MNT/boot/vmlinuz64 $BOOT_PATH/$1
+  cp $ISO_MNT/boot/initrd.img  $BOOT_PATH/$1
+  cp $ISO_MNT/boot/vmlinuz64 $BOOT_PATH/$1
   umount $ISO_MNT
   rm -rf $ISO_MNT
 fi
