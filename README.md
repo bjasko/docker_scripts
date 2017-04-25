@@ -5,8 +5,8 @@
 Za kreiranje postgresql docker CT-a
 
 ```
-  ./greenbox_db_create [DOCKER_HOST] [DOCKER_CT] [PORT]
-  ./greenbox_db_create greenbox-110.db.out.ba  F18-db-rudze-dobavljaci 54325
+	./greenbox_db_create [DOCKER_HOST] [DOCKER_CT] [PORT]
+  	./greenbox_db_create greenbox-110.db.out.ba  F18-db-rudze-dobavljaci 54325
 
 ```
 * kreira docker CT na remote docker hostu
@@ -20,9 +20,9 @@ Za kreiranje postgresql docker CT-a
 Za kreiranje greenbox USB diska
 
 ```
-  ./greenbox_usb_create
-   argumenti su:   ./greenbox_usb_create [USB_HDD]
-   npr:   ./greenbox_usb_create /dev/sdc
+  	./greenbox_usb_create
+   	argumenti su:   ./greenbox_usb_create [USB_HDD]
+   	npr:   ./greenbox_usb_create /dev/sdc
 
 ```
 
