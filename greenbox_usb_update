@@ -21,7 +21,7 @@ BOOT_PATH=/media/boot
 
 if wget --spider $GREEN_ISO 2>/dev/null; then
   echo "update postoji, nastavljam"
-  cd  /tmp && wget $GREEN_ISO
+  cd  /tmp && wget -q $GREEN_ISO
 
 else
   echo "update iso ne postoji"
@@ -64,7 +64,7 @@ fi
 
 if  [ "$DEF_BOOT" == "" ]; then
   echo "$DEF_BOOT je prazan dodajem ga"
-  sed -i -e  sed -i '1s/^/default boot'"$1"'/'  $GREEN_CFG
+  sed -i '3idefault boot'"$1"'/'  $GREEN_CFG
   sync
 else
   sed -i -e  's/default '"$DEF_BOOT"'/default boot'"$1"'/' $GREEN_CFG
