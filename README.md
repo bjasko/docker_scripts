@@ -11,3 +11,16 @@
 * pwdless ssh poželjan
 * postojeći CT se uvijek briše
 * podaci su u CT-u
+
+
+## greenbox_usb_create 
+
+
+
+```
+  ./greenbox_usb_create
+   argumenti su:   ./greenbox_usb_create [USB_HDD]
+   npr:   ./greenbox_usb_create /dev/sdc
+
+```
+
