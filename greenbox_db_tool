@@ -27,8 +27,7 @@ ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
     echo "$ZDATASET postoji, provjeri ....... izlazim ....."
     exit
   else
-    echo "$ZDATASET ne postoji ....... kreiram ga ....."
-    sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
+    echo "$ZDATASET ne postoji idem dalje....."
   fi
 
 }
@@ -58,13 +57,27 @@ port_check () {
 }
 
 
+zfs_create () {
 
+  ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
+
+    if [ $ZCHECK -gt 0 ]; then
+      echo "$ZDATASET postoji, provjeri ....... izlazim ....."
+      exit
+    else
+      echo "$ZDATASET ne postoji ....... kreiram ga ....."
+      sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
+    fi
+
+  }
+}
 create () {
 
   # ZFS status
   zfs_check
   ct_check
   port_check
+  zfs_create
   # kreiram CT
   docker run --name $SERVICE -itd \
     -v $VOLUME_BASE/lib:/var/lib/postgresql \
