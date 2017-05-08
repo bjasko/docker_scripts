@@ -31,11 +31,10 @@ ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
     echo "$ZDATASET ne postoji ....... kreiram ga ....."
     sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
   fi
-  EOF
 }
 
 create () {
-  
+
   # ZFS status
   zfs_check
   # kreiram CT
