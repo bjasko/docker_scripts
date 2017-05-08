@@ -24,10 +24,10 @@ zfs_check () {
 ZCHECK=$(zfs list | grep -ic $ZDATASET)
 
   if [$ZCHECK -gt 0 ];
-    echo $ZDATASET postoji, provjeri ....... izlazim :(
+    echo $ZDATASET postoji, provjeri ....... izlazim .....
     exit
     else
-    echo $ZDATASET ne postoji ....... kreiram ga :)
+    echo $ZDATASET ne postoji ....... kreiram ga .....
     sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
   fi
 }
