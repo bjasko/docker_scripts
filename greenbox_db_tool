@@ -68,9 +68,8 @@ zfs_create () {
       echo "$ZDATASET ne postoji ....... kreiram ga ....."
       sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
     fi
-
-  }
 }
+
 create () {
 
   # ZFS status
