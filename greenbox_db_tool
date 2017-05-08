@@ -16,23 +16,26 @@ ZQUOTA=50G
 VOLUME_BASE=/data/$SERVICE
 DOCKER_IMAGE=bjasko/postgresql
 DOCKER_PORT=$3
-GREEN_HOST=$4
+
 
 
 zfs_check () {
 
-  if [[$(sudo zfs list | grep -ic $ZDATASET) -gt 0 ]]; then
+
+ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
+
+  if [ $ZCHECK -gt 0 ]; then
     echo "$ZDATASET postoji, provjeri ....... izlazim ....."
     exit
   else
     echo "$ZDATASET ne postoji ....... kreiram ga ....."
     sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
   fi
-
+  EOF
 }
 
 create () {
-
+  ssh -p2222  $GREEN_HOST << EOF
   # ZFS status
   zfs_check
   # kreiram CT
@@ -43,6 +46,7 @@ create () {
     -e 'PG_PASSWORD=password' \
     -p $DOCKER_PORT:5432 \
     $DOCKER_IMAGE
+    EOF
 }
 
 
@@ -72,7 +76,6 @@ stop () {
 
 
 
-
 case "$1" in
     create)
       create
@@ -92,6 +95,5 @@ case "$1" in
     *)
        echo "Usage: $0 {create|start|stop|status|restart}"
 esac
-
 
 exit 0
