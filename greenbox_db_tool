@@ -35,7 +35,7 @@ ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
 }
 
 create () {
-  ssh -p2222  $GREEN_HOST << EOF
+  
   # ZFS status
   zfs_check
   # kreiram CT
