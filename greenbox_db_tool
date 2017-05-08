@@ -126,15 +126,21 @@ status () {
 }
 
 
-backup () {
+basebackup () {
 
   docker run --name $SERVICE-backup -it --rm \
     --link $SERVICE:master \
     -e 'REPLICATION_MODE=backup' --env 'REPLICATION_SSLMODE=prefer' \
     -e 'REPLICATION_HOST=master' --env 'REPLICATION_PORT=5432'  \
     -e 'REPLICATION_USER=repluser' --env 'REPLICATION_PASS=password' \
-    -v $VOLUME_BASE/backups/postgresql.$(date +%Y%m%d%H%M%S):/var/lib/postgresql \
+    -v $VOLUME_BASE/basebackups/postgresql.$(date +%Y%m%d%H%M%S):/var/lib/postgresql \
     $DOCKER_IMAGE
+}
+
+sqlbackup () {
+
+ docker exec -it $SERVICE pg_dumpall -U postgres | gzip -c > $VOLUME_BASE/slqbackups/postgresql.$(date +%Y%m%d%H%M%S).sql.gz
+
 }
 
 case "$1" in
@@ -154,8 +160,11 @@ case "$1" in
     status)
        status
        ;;
-    backup)
-       backup
+    basebackup)
+       basebackup
+       ;;
+    sqlbackup)
+       sqlbackup
        ;;
     *)
        echo "Usage: $0 {create|start|stop|status|restart}"
