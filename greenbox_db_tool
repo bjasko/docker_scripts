@@ -138,8 +138,8 @@ basebackup () {
 }
 
 sqlbackup () {
-
- docker exec -it $SERVICE pg_dumpall -U postgres | gzip -c > $VOLUME_BASE/slqbackups/postgresql.$(date +%Y%m%d%H%M%S).sql.gz
+ [ -d $VOLUME_BASE/slqbackups  ] || mkdir -p $VOLUME_BASE/slqbackups
+ docker exec -it $SERVICE pg_dumpall -U postgres | gzip -c > "$VOLUME_BASE/slqbackups/postgresql.$(date +%Y%m%d%H%M%S).sql.gz"
 
 }
 
