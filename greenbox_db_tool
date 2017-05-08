@@ -24,10 +24,10 @@ zfs_check () {
 ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
 
   if [ $ZCHECK -gt 0 ]; then
-    echo "$ZDATASET postoji, provjeri ....... izlazim ....."
+    echo "ZFS dataset $ZDATASET postoji, provjeri ....... izlazim ....."
     exit
   else
-    echo "$ZDATASET ne postoji idem dalje....."
+    echo "ZFS dataset $ZDATASET ne postoji idem dalje....."
   fi
 
 }
@@ -37,10 +37,10 @@ ct_check () {
 
 RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
 if [ $? -eq 1 ]; then
-  echo "$SERVICE ct ne postoji idem dalje......"
+  echo "$SERVICE CT nije pokrenut idem dalje......"
   fi
   if [ "$RUNNING" == "true" ]; then
-  echo "$SERVICE CT je već pokrenut, provjeri...."
+  echo "$SERVICE CT je već pokrenut, provjeri konfiguraciju...."
   exit 0
 fi
 }
@@ -62,10 +62,10 @@ zfs_create () {
   ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
 
     if [ $ZCHECK -gt 0 ]; then
-      echo "$ZDATASET postoji, provjeri ....... izlazim ....."
+      echo "ZFS dataset $ZDATASET postoji, provjeri, izlazim ....."
       exit
     else
-      echo "$ZDATASET ne postoji ....... kreiram ga ....."
+      echo "ZFS dataset $ZDATASET ne postoji, kreiram ga ....."
       sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
     fi
 }
@@ -78,6 +78,10 @@ create () {
   zfs_check
   ct_check
   port_check
+  echo "###########################"
+  echo "#     INSTALACIJA CT-a    #"
+  echo "###########################"
+
   echo "Sve izgleda OK, kreiram ZFS dataset $ZDATASET"
   zfs_create
   echo "Sve izgleda OK, kreiram CT  $SERVICE"
@@ -91,8 +95,7 @@ create () {
   echo "Kreiran $SERVICE na portu $DOCKER_PORT"
   echo "ZFS dataset $ZDATASET mountpoint $VOLUME_BASE"
   echo "Status:"
-  sleep 3
-  docker logs --tail=100 $SERVICE
+  status
 }
 
 
@@ -121,6 +124,7 @@ stop () {
 }
 
 status () {
+  ct_check
   docker logs --follow $SERVICE
 }
 
@@ -139,6 +143,7 @@ case "$1" in
        start
        ;;
     status)
+       status
        ;;
     *)
        echo "Usage: $0 {create|start|stop|status|restart}"
