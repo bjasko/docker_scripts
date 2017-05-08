@@ -21,7 +21,7 @@ DOCKER_PORT=$3
 
 zfs_check () {
 
-ZCHECK=$(zfs list | grep -ic $ZDATASET)
+ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
 
   if [ $ZCHECK -gt 0 ]; then
     echo "$ZDATASET postoji, provjeri ....... izlazim ....."
