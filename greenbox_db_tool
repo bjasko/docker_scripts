@@ -86,6 +86,7 @@ create () {
     -v $VOLUME_BASE/etc:/etc/postgresql \
     -v $VOLUME_BASE/log:/var/log/postgresql \
     -e 'PG_PASSWORD=password' \
+    -e 'REPLICATION_USER=repluser' -e 'REPLICATION_PASS=password' \
     -p $DOCKER_PORT:5432 \
     $DOCKER_IMAGE
   echo "Kreiran $SERVICE na portu $DOCKER_PORT"
@@ -128,10 +129,10 @@ status () {
 backup () {
 
   docker run --name $SERVICE-backup -it --rm \
-    --link $SERVICE \
+    --link $SERVICE:master \
     -e 'REPLICATION_MODE=backup' --env 'REPLICATION_SSLMODE=prefer' \
     -e 'REPLICATION_HOST=master' --env 'REPLICATION_PORT=5432'  \
-    -e 'REPLICATION_USER=repluser' --env 'REPLICATION_PASS=repluserpass' \
+    -e 'REPLICATION_USER=repluser' --env 'REPLICATION_PASS=password' \
     -v $VOLUME_BASE/backups/postgresql.$(date +%Y%m%d%H%M%S):/var/lib/postgresql \
     $DOCKER_IMAGE
 }
