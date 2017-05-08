@@ -91,7 +91,8 @@ create () {
   echo "Kreiran $SERVICE na portu $DOCKER_PORT"
   echo "ZFS dataset $ZDATASET mountpoint $VOLUME_BASE"
   echo "Status:"
-  status
+  sleep 3
+  docker logs --tail=100 $SERVICE
 }
 
 
@@ -120,7 +121,7 @@ stop () {
 }
 
 status () {
-  docker logs $SERVICE
+  docker logs --follow $SERVICE
 }
 
 case "$1" in
