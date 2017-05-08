@@ -21,7 +21,6 @@ DOCKER_PORT=$3
 
 zfs_check () {
 
-
 ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
 
   if [ $ZCHECK -gt 0 ]; then
@@ -49,9 +48,9 @@ fi
 
 port_check () {
 
-  PCHECK=$(docker ps | grep -ic)
+  PCHECK=$(docker ps | grep -ic $DOCKER_PORT)
   if [ $PCHECK -gt 0 ]; then
-    echo "$PORT je zauzet, provjeri ....... izlazim ....."
+    echo "$DOCKER_PORT je zauzet, provjeri ....... izlazim ....."
     exit 0
   else
     echo "$PCHECK nije zauzet nastavljam ....."
@@ -79,7 +78,7 @@ create () {
 
 
 help () {
-  echo "TBD."
+  echo "TBD"
 }
 
 start () {
