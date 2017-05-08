@@ -1,13 +1,9 @@
 #!/bin/bash
 
 
-# help
-if [ $# -lt 3 ]
-then
-  echo "argumenti su:    [GREENBOX_HOST] [DOCKER_CT] [PORT]"
-  echo " npr:   ./greenbox_db_create greenbox-110.db.out.ba  F18-db-rudze-dobavljaci 54325"
-  exit 1
-fi
+# "###########################"
+# "#     KONFIGURACIJA       #"
+# "###########################"
 
 SERVICE=$2
 ZPOOL=green
@@ -124,8 +120,20 @@ stop () {
 }
 
 status () {
-  ct_check
+  docker ps | grep $SERVICE
   docker logs --follow $SERVICE
+}
+
+
+backup () {
+
+  docker run --name $SERVICE-backup -it --rm \
+    --link $SERVICE \
+    -e 'REPLICATION_MODE=backup' --env 'REPLICATION_SSLMODE=prefer' \
+    -e 'REPLICATION_HOST=master' --env 'REPLICATION_PORT=5432'  \
+    -e 'REPLICATION_USER=repluser' --env 'REPLICATION_PASS=repluserpass' \
+    -v $VOLUME_BASE/backups/postgresql.$(date +%Y%m%d%H%M%S):/var/lib/postgresql \
+    $DOCKER_IMAGE
 }
 
 case "$1" in
@@ -144,6 +152,9 @@ case "$1" in
        ;;
     status)
        status
+       ;;
+    backup)
+       backup
        ;;
     *)
        echo "Usage: $0 {create|start|stop|status|restart}"
