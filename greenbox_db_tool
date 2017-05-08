@@ -23,11 +23,11 @@ zfs_check () {
 
 ZCHECK=$(zfs list | grep -ic $ZDATASET)
 
-  if [$ZCHECK -gt 0 ];
-    echo $ZDATASET postoji, provjeri ....... izlazim .....
+  if [ $ZCHECK -gt 0 ]; then
+    echo "$ZDATASET postoji, provjeri ....... izlazim ....."
     exit
-    else
-    echo $ZDATASET ne postoji ....... kreiram ga .....
+  else
+    echo "$ZDATASET ne postoji ....... kreiram ga ....."
     sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
   fi
 }
@@ -53,7 +53,7 @@ help () {
 
 start () {
 
- [ ! -d $VOLUME_BASE ] && echo $VOLUME_BASE ne postoji prekidam..... :( && exit
+ [ ! -d $VOLUME_BASE ] && echo "$VOLUME_BASE ne postoji prekidam....."  && exit
 
 stop
 docker run --name $SERVICE -itd \
@@ -66,8 +66,8 @@ docker run --name $SERVICE -itd \
 }
 
 stop () {
-  docker stop $S_HOST
-  docker rm -f $S_HOST
+  docker stop $SERVICE
+  docker rm -f $SERVICE
 }
 
 
