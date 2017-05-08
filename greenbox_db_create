@@ -42,7 +42,7 @@ echo "kreiram xtrole grupu"
 docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "CREATE ROLE xtrole   NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;"
 
 echo "kreiram admin account"
-docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "CREATE USER admin WITH PASSWORD 'passwoed' SUPERUSER INHERIT CREATEDB CREATEROLE REPLICATION;"
+docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "CREATE USER admin WITH PASSWORD 'boutpgmin' SUPERUSER INHERIT CREATEDB CREATEROLE REPLICATION;"
 
 echo "ubacujem admina u xtrole grupu"
 docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "GRANT xtrole TO admin;"

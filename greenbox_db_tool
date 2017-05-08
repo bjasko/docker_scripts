@@ -1,0 +1,95 @@
+#!/bin/bash
+
+
+# help
+if [ $# -lt 3 ]
+then
+  echo "argumenti su:    [GREENBOX_HOST] [DOCKER_CT] [PORT]"
+  echo " npr:   ./greenbox_db_create greenbox-110.db.out.ba  F18-db-rudze-dobavljaci 54325"
+  exit 1
+fi
+
+SERVICE=$2
+ZPOOL=green
+ZDATASET=$ZPOOL/$SERVICE
+ZQUOTA=50G
+VOLUME_BASE=/data/$SERVICE
+DOCKER_IMAGE=bjasko/postgresql
+DOCKER_PORT=$3
+
+
+
+zfs_check () {
+
+ZCHECK=$(zfs list | grep -ic $ZDATASET)
+
+  if [$ZCHECK -gt 0 ];
+    echo $ZDATASET postoji, provjeri ....... izlazim :(
+    exit
+    else
+    echo $ZDATASET ne postoji ....... kreiram ga :)
+    sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
+  fi
+}
+
+create () {
+  # ZFS status
+  zfs_check
+  # kreiram CT
+  docker run --name $SERVICE -itd \
+    -v $VOLUME_BASE/lib:/var/lib/postgresql \
+    -v $VOLUME_BASE/etc:/etc/postgresql \
+    -v $VOLUME_BASE/log:/var/log/postgresql \
+    -e 'PG_PASSWORD=password' \
+    -p $DOCKER_PORT:5432 \
+    $DOCKER_IMAGE
+}
+
+
+
+help () {
+  echo "TBD."
+}
+
+start () {
+
+ [ ! -d $VOLUME_BASE ] && echo $VOLUME_BASE ne postoji prekidam..... :( && exit
+
+stop
+docker run --name $SERVICE -itd \
+  -v $VOLUME_BASE/lib:/var/lib/postgresql \
+  -v $VOLUME_BASE/etc:/etc/postgresql \
+  -v $VOLUME_BASE/log:/var/log/postgresql \
+  -p $DOCKER_PORT:5432 \
+     $DOCKER_IMAGE
+
+}
+
+stop () {
+  docker stop $S_HOST
+  docker rm -f $S_HOST
+}
+
+
+
+case "$1" in
+    create)
+      create
+       ;;
+    start)
+       start
+       ;;
+    stop)
+       stop
+       ;;
+    restart)
+       stop
+       start
+       ;;
+    status)
+       ;;
+    *)
+       echo "Usage: $0 {create|start|stop|status|restart}"
+esac
+
+exit 0
