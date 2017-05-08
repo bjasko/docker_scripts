@@ -45,6 +45,7 @@ if [ $? -eq 1 ]; then
   echo "$SERVICE ct je već pokrenut, provjeriti...."
   exit 0
 fi
+}
 
 port_check () {
 
@@ -55,7 +56,6 @@ port_check () {
   else
     echo "$PCHECK nije zauzet nastavljam ....."
   fi
-
 }
 
 
@@ -74,7 +74,6 @@ create () {
     -e 'PG_PASSWORD=password' \
     -p $DOCKER_PORT:5432 \
     $DOCKER_IMAGE
-
 }
 
 
