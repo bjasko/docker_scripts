@@ -40,7 +40,7 @@ if [ $? -eq 1 ]; then
   echo "$SERVICE ct ne postoji idem dalje......"
   fi
   if [ "$RUNNING" == "true" ]; then
-  echo "$SERVICE ct je već pokrenut, provjeriti...."
+  echo "$SERVICE CT je već pokrenut, provjeri...."
   exit 0
 fi
 }
@@ -49,10 +49,10 @@ port_check () {
 
   PCHECK=$(docker ps | grep -ic $DOCKER_PORT)
   if [ $PCHECK -gt 0 ]; then
-    echo "$DOCKER_PORT je zauzet, provjeri ....... izlazim ....."
+    echo "CT port $DOCKER_PORT je već zauzet, provjeri konfiguraciju, izlazim ....."
     exit 0
   else
-    echo "$PCHECK nije zauzet nastavljam ....."
+    echo "CT port $DOCKER_PORT nije zauzet nastavljam ....."
   fi
 }
 
@@ -72,12 +72,15 @@ zfs_create () {
 
 create () {
 
-  # ZFS status
+  echo "###########################"
+  echo "# PROVJERA KONFIGURACIJE  #"
+  echo "###########################"
   zfs_check
   ct_check
   port_check
+  echo "Sve izgleda OK, kreiram ZFS dataset $ZDATASET"
   zfs_create
-  # kreiram CT
+  echo "Sve izgleda OK, kreiram CT  $SERVICE"
   docker run --name $SERVICE -itd \
     -v $VOLUME_BASE/lib:/var/lib/postgresql \
     -v $VOLUME_BASE/etc:/etc/postgresql \
@@ -85,6 +88,10 @@ create () {
     -e 'PG_PASSWORD=password' \
     -p $DOCKER_PORT:5432 \
     $DOCKER_IMAGE
+  echo "Kreiran $SERVICE na portu $DOCKER_PORT"
+  echo "ZFS dataset $ZDATASET mountpoint $VOLUME_BASE"
+  echo "Status:"
+  status
 }
 
 
@@ -112,7 +119,9 @@ stop () {
   docker rm -f $SERVICE
 }
 
-
+status () {
+  docker logs $SERVICE
+}
 
 case "$1" in
     create)
