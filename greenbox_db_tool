@@ -34,10 +34,38 @@ ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
 
 }
 
+
+ct_check () {
+
+RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
+if [ $? -eq 1 ]; then
+  echo "$SERVICE ct ne postoji idem dalje......"
+  fi
+  if [ "$RUNNING" == "true" ]; then
+  echo "$SERVICE ct je već pokrenut, provjeriti...."
+  exit 0
+fi
+
+port_check () {
+
+  PCHECK=$(docker ps | grep -ic)
+  if [ $PCHECK -gt 0 ]; then
+    echo "$PORT je zauzet, provjeri ....... izlazim ....."
+    exit 0
+  else
+    echo "$PCHECK nije zauzet nastavljam ....."
+  fi
+
+}
+
+
+
 create () {
 
   # ZFS status
   zfs_check
+  ct_check
+  port_check
   # kreiram CT
   docker run --name $SERVICE -itd \
     -v $VOLUME_BASE/lib:/var/lib/postgresql \
