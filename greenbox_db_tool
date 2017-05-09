@@ -16,72 +16,72 @@ DOCKER_PORT=$3
 
 
 zfs_check () {
-
-ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
-
-  if [ $ZCHECK -gt 0 ]; then
-    echo "ZFS dataset $ZDATASET postoji, provjeri ....... izlazim ....."
-    exit
-  else
-    echo "ZFS dataset $ZDATASET ne postoji idem dalje....."
-  fi
-
+    
+    ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
+    
+    if [ $ZCHECK -gt 0 ]; then
+        echo "ZFS dataset $ZDATASET postoji, provjeri ....... izlazim ....."
+        exit
+    else
+        echo "ZFS dataset $ZDATASET ne postoji idem dalje....."
+    fi
+    
 }
 
 
 ct_check () {
-
-RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
-if [ $? -eq 1 ]; then
-  echo "$SERVICE CT nije pokrenut idem dalje......"
-  fi
-  if [ "$RUNNING" == "true" ]; then
-  echo "$SERVICE CT je već pokrenut, provjeri konfiguraciju...."
-  exit 0
-fi
+    
+    RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
+    if [ $? -eq 1 ]; then
+        echo "$SERVICE CT nije pokrenut idem dalje......"
+    fi
+    if [ "$RUNNING" == "true" ]; then
+        echo "$SERVICE CT je već pokrenut, provjeri konfiguraciju...."
+        exit 0
+    fi
 }
 
 port_check () {
-
-  PCHECK=$(docker ps | grep -ic $DOCKER_PORT)
-  if [ $PCHECK -gt 0 ]; then
-    echo "CT port $DOCKER_PORT je već zauzet, provjeri konfiguraciju, izlazim ....."
-    exit 0
-  else
-    echo "CT port $DOCKER_PORT nije zauzet nastavljam ....."
-  fi
+    
+    PCHECK=$(docker ps | grep -ic $DOCKER_PORT)
+    if [ $PCHECK -gt 0 ]; then
+        echo "CT port $DOCKER_PORT je već zauzet, provjeri konfiguraciju, izlazim ....."
+        exit 0
+    else
+        echo "CT port $DOCKER_PORT nije zauzet nastavljam ....."
+    fi
 }
 
 
 zfs_create () {
-
-  ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
-
+    
+    ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
+    
     if [ $ZCHECK -gt 0 ]; then
-      echo "ZFS dataset $ZDATASET postoji, provjeri, izlazim ....."
-      exit
+        echo "ZFS dataset $ZDATASET postoji, provjeri, izlazim ....."
+        exit
     else
-      echo "ZFS dataset $ZDATASET ne postoji, kreiram ga ....."
-      sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
+        echo "ZFS dataset $ZDATASET ne postoji, kreiram ga ....."
+        sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
     fi
 }
 
 create () {
-
-  echo "###########################"
-  echo "# PROVJERA KONFIGURACIJE  #"
-  echo "###########################"
-  zfs_check
-  ct_check
-  port_check
-  echo "###########################"
-  echo "#     INSTALACIJA CT-a    #"
-  echo "###########################"
-
-  echo "Sve izgleda OK, kreiram ZFS dataset $ZDATASET"
-  zfs_create
-  echo "Sve izgleda OK, kreiram CT  $SERVICE"
-  docker run --name $SERVICE -itd \
+    
+    echo "###########################"
+    echo "# PROVJERA KONFIGURACIJE  #"
+    echo "###########################"
+    zfs_check
+    ct_check
+    port_check
+    echo "###########################"
+    echo "#     INSTALACIJA CT-a    #"
+    echo "###########################"
+    
+    echo "Sve izgleda OK, kreiram ZFS dataset $ZDATASET"
+    zfs_create
+    echo "Sve izgleda OK, kreiram CT  $SERVICE"
+    docker run --name $SERVICE -itd \
     -v $VOLUME_BASE/lib:/var/lib/postgresql \
     -v $VOLUME_BASE/etc:/etc/postgresql \
     -v $VOLUME_BASE/log:/var/log/postgresql \
@@ -89,46 +89,46 @@ create () {
     -e 'REPLICATION_USER=repluser' -e 'REPLICATION_PASS=password' \
     -p $DOCKER_PORT:5432 \
     $DOCKER_IMAGE
-  echo "Kreiran $SERVICE na portu $DOCKER_PORT"
-  echo "ZFS dataset $ZDATASET mountpoint $VOLUME_BASE"
-  echo "Status:"
-  status
+    echo "Kreiran $SERVICE na portu $DOCKER_PORT"
+    echo "ZFS dataset $ZDATASET mountpoint $VOLUME_BASE"
+    echo "Status:"
+    status
 }
 
 
 
 help () {
-  echo "TBD"
+    echo "TBD"
 }
 
 start () {
-
- [ ! -d $VOLUME_BASE ] && echo "$VOLUME_BASE ne postoji prekidam....."  && exit
-
-stop
-docker run --name $SERVICE -itd \
-  -v $VOLUME_BASE/lib:/var/lib/postgresql \
-  -v $VOLUME_BASE/etc:/etc/postgresql \
-  -v $VOLUME_BASE/log:/var/log/postgresql \
-  -p $DOCKER_PORT:5432 \
-     $DOCKER_IMAGE
-
+    
+    [ ! -d $VOLUME_BASE ] && echo "$VOLUME_BASE ne postoji prekidam....."  && exit
+    
+    stop
+    docker run --name $SERVICE -itd \
+    -v $VOLUME_BASE/lib:/var/lib/postgresql \
+    -v $VOLUME_BASE/etc:/etc/postgresql \
+    -v $VOLUME_BASE/log:/var/log/postgresql \
+    -p $DOCKER_PORT:5432 \
+    $DOCKER_IMAGE
+    
 }
 
 stop () {
-  docker stop $SERVICE
-  docker rm -f $SERVICE
+    docker stop $SERVICE
+    docker rm -f $SERVICE
 }
 
 status () {
-  docker ps | grep $SERVICE
-  docker logs --follow $SERVICE
+    docker ps | grep $SERVICE
+    docker logs --follow $SERVICE
 }
 
 
 basebackup () {
-
-  docker run --name $SERVICE-backup -it --rm \
+    
+    docker run --name $SERVICE-backup -it --rm \
     --link $SERVICE:master \
     -e 'REPLICATION_MODE=backup' --env 'REPLICATION_SSLMODE=prefer' \
     -e 'REPLICATION_HOST=master' --env 'REPLICATION_PORT=5432'  \
@@ -138,36 +138,36 @@ basebackup () {
 }
 
 sqlbackup () {
- [ -d $VOLUME_BASE/slqbackups  ] || sudo mkdir -p $VOLUME_BASE/slqbackups && chmod 777 $VOLUME_BASE/slqbackups
- docker exec -it $SERVICE pg_dumpall -U postgres | gzip -c > "$VOLUME_BASE/slqbackups/postgresql.$(date +%Y%m%d%H%M%S).sql.gz"
-
+    [ -d $VOLUME_BASE/slqbackups  ] || sudo mkdir -p $VOLUME_BASE/slqbackups && sudo chmod 777 $VOLUME_BASE/slqbackups
+    docker exec -it $SERVICE pg_dumpall -U postgres | gzip -c > "$VOLUME_BASE/slqbackups/postgresql.$(date +%Y%m%d%H%M%S).sql.gz"
+    
 }
 
 case "$1" in
     create)
-      create
-       ;;
+        create
+    ;;
     start)
-       start
-       ;;
+        start
+    ;;
     stop)
-       stop
-       ;;
+        stop
+    ;;
     restart)
-       stop
-       start
-       ;;
+        stop
+        start
+    ;;
     status)
-       status
-       ;;
+        status
+    ;;
     basebackup)
-       basebackup
-       ;;
+        basebackup
+    ;;
     sqlbackup)
-       sqlbackup
-       ;;
+        sqlbackup
+    ;;
     *)
-       echo "Usage: $0 {create|start|stop|status|restart}"
+        echo "Usage: $0 {create|start|stop|status|restart}"
 esac
 
 exit 0

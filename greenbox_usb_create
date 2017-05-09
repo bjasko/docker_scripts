@@ -1,11 +1,11 @@
-#! /bin/bash 
+#! /bin/bash
 
 # help
 if [ $# -lt 1 ]
 then
-  echo "argumenti su:   ./greenbox_usb_create [USB_HDD]"
-  echo " npr:   ./greenbox_usb_create /dev/sdc"
-  exit 1
+    echo "argumenti su:   ./greenbox_usb_create [USB_HDD]"
+    echo " npr:   ./greenbox_usb_create /dev/sdc"
+    exit 1
 fi
 
 GREEN_ISO="http://download.bring.out.ba/greenbox.iso"
@@ -19,13 +19,13 @@ parted -s ${USB_HDD} rm 2
 parted -s ${USB_HDD} rm 3
 parted  -s $USB_HDD mktable msdos
 parted -s $USB_HDD mkpart primary fat16 2048s 500MiB
-parted  -s $USB_HDD mkpart primary fat32  600MiB 40% 
-parted  -s $USB_HDD mkpart primary fat32 40% 100% 
+parted  -s $USB_HDD mkpart primary fat32  600MiB 40%
+parted  -s $USB_HDD mkpart primary fat32 40% 100%
 parted  -s $USB_HDD set 1 boot on
 umount ${USB_HDD}1
 umount ${USB_HDD}2
 umount ${USB_HDD}3
-mkfs.vfat -n BOOT ${USB_HDD}1 
+mkfs.vfat -n BOOT ${USB_HDD}1
 mkfs.vfat -n GREEN_INIT ${USB_HDD}2
 mkfs.vfat -n GREEN_DATA ${USB_HDD}3
 
@@ -33,5 +33,5 @@ parted $USB_HDD  print
 
 read -p "izbaci USB pa ga vrati i pritisni bilo koju tipku... " -n1 -s
 
-unetbootin method=diskimage isofile=$GREEN_ISO unetbootin installtype=USB   targetdrive=${USB_HDD}1  autoinstall=yes 
+unetbootin method=diskimage isofile=$GREEN_ISO unetbootin installtype=USB   targetdrive=${USB_HDD}1  autoinstall=yes
 

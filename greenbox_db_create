@@ -3,9 +3,9 @@
 # help
 if [ $# -lt 3 ]
 then
-  echo "argumenti su:   ./greenbox_db_create [DOCKER_HOST] [DOCKER_CT] [PORT]"
-  echo " npr:   ./greenbox_db_create greenbox-110.db.out.ba  F18-db-rudze-dobavljaci 54325"
-  exit 1
+    echo "argumenti su:   ./greenbox_db_create [DOCKER_HOST] [DOCKER_CT] [PORT]"
+    echo " npr:   ./greenbox_db_create greenbox-110.db.out.ba  F18-db-rudze-dobavljaci 54325"
+    exit 1
 fi
 
 # env vars
@@ -18,7 +18,7 @@ DOCKER_CT_VOLUME=$ZFS_DATASET/$DOCKER_CT
 
 
 # izrši remote komande
-ssh -p2222  $DOCKER_HOST << EOF
+ssh   $DOCKER_HOST << EOF
 
 # postoji li zfs dataset
 [ ! -d $ZFS_DATASET ] && sudo zfs create  -o mountpoint=$ZFS_DATASET green/postgresql
