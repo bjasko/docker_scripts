@@ -1,52 +1,59 @@
 #! /bin/bash
+PATH=/opt/vim/bin:/opt/python2/bin:/opt/green/bin:/opt/docker/bin:/opt/boot/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/bin:/usr/sbin:/opt/boot/bin
 
 # help
-if [ $# -lt 3 ]
+if [ $# -lt 2 ]
 then
-    echo "argumenti su:   ./greenbox_db_create [DOCKER_HOST] [DOCKER_CT] [PORT]"
-    echo " npr:   ./greenbox_db_create greenbox-110.db.out.ba  F18-db-rudze-dobavljaci 54325"
-    exit 1
+    echo "argumenti su:   ./greenbox_db_create  [DOCKER_CT] [PORT]"
+    echo "npr: ./greenbox_db_create F18-db-rudze-dobavljaci 54325"
+    echo "remote execute"
+    echo "ssh  docker@srv1bout bash  -s -- < greenbox_db_create  f18-demo4 54322"
+    exit
 fi
 
-# env vars
-DOCKER_HOST=docker@$1
-DOCKER_CT=$2
-DOCKER_PORT=$3
-DOCKER_IMAGE=sameersbn/postgresql
-ZFS_DATASET=/data/postgresql
-DOCKER_CT_VOLUME=$ZFS_DATASET/$DOCKER_CT
+SERVICE=$1
+ZPOOL=green
+ZDATASET=$ZPOOL/$SERVICE
+ZQUOTA=50G
+VOLUME_BASE=/data/$SERVICE
+DOCKER_IMAGE=bjasko/postgresql
+DOCKER_PORT=$2
+RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
+PCHECK=$(docker ps | grep -ic $DOCKER_PORT)
+ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
 
+if [ $? -eq 1 ]; then
+    echo "$SERVICE CT nije pokrenut idem dalje......"
+fi
+if [ "$RUNNING" == "true" ]; then
+    echo "$SERVICE CT je već pokrenut, provjeri konfiguraciju...."
+    exit 0
+fi
 
-# izrši remote komande
-ssh   $DOCKER_HOST << EOF
+if [ $PCHECK -gt 0 ]; then
+    echo "CT port $DOCKER_PORT je već zauzet, provjeri konfiguraciju, izlazim ....."
+    exit 0
+else
+    echo "CT port $DOCKER_PORT nije zauzet nastavljam ....."
+fi
 
-# postoji li zfs dataset
-[ ! -d $ZFS_DATASET ] && sudo zfs create  -o mountpoint=$ZFS_DATASET green/postgresql
+if [ $ZCHECK -gt 0 ]; then
+    echo "ZFS dataset $ZDATASET postoji, provjeri, izlazim ....."
+    exit
+else
+    echo "ZFS dataset $ZDATASET ne postoji, kreiram ga ....."
+    sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
+fi
 
-# uvijek brišem stari CT
-docker rm -f $DOCKER_CT
+echo "Sve izgleda OK, kreiram CT  $SERVICE"
 
-# kreiram CT
-docker run --name $DOCKER_CT -itd \
-  -v $DOCKER_CT_VOLUME/lib:/var/lib/postgresql \
-  -v $DOCKER_CT_VOLUME/etc:/etc/postgresql \
-  -v $DOCKER_CT_VOLUME/log:/var/log/postgresql \
-  -e 'DB_USER=bringout' --env 'DB_PASS=password' \
-  -e 'PG_PASSWORD=password' \
-  -p $DOCKER_PORT:5432 \
-  $DOCKER_IMAGE
-
-sleep 10
-# cekam da se psql podigne
-echo "kreiram xtrole grupu"
-docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "CREATE ROLE xtrole   NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;"
-
-echo "kreiram admin account"
-docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "CREATE USER admin WITH PASSWORD 'boutpgmin' SUPERUSER INHERIT CREATEDB CREATEROLE REPLICATION;"
-
-echo "ubacujem admina u xtrole grupu"
-docker exec  $DOCKER_CT psql -U postgres  -d postgres  -c "GRANT xtrole TO admin;"
-
-EOF
+docker run --name $SERVICE -itd \
+-v $VOLUME_BASE/lib:/var/lib/postgresql \
+-v $VOLUME_BASE/etc:/etc/postgresql \
+-v $VOLUME_BASE/log:/var/log/postgresql \
+-e 'PG_PASSWORD=password' \
+-e 'REPLICATION_USER=repluser' -e 'REPLICATION_PASS=password' \
+-p $DOCKER_PORT:5432 \
+$DOCKER_IMAGE
 
 exit

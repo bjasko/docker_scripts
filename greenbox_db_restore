@@ -1,0 +1,65 @@
+#!/bin/bash
+PATH=/opt/vim/bin:/opt/python2/bin:/opt/green/bin:/opt/docker/bin:/opt/boot/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/bin:/usr/sbin:/opt/boot/bin
+
+# help
+if [ $# -lt 2 ]
+then
+    echo "argumenti su:   ./greenbox_db_restore  [DESTINATION] [SOURCE]"
+    echo "npr: ./greenbox_db_create F18-db-rudze-test F18-db-rudze-dobavljaci "
+    exit
+fi
+
+ORIGIN=$2
+SERVICE=$1
+VOLUME_BASE=/data/$SERVICE
+TIME=$(date +%Y%m%d%H%M%S)
+SQLDEST=$VOLUME_BASE/sqlbackups
+LASTDUMP=$(rclone lsl gdrive_bout:$ORIGIN | head -1 | awk '{print $4}')
+ZPOOL=green
+ZDATASET=$ZPOOL/$SERVICE
+DBS=$(docker exec -i $SERVICE  psql -lt  -U postgres | egrep -v 'template[01]' | egrep -v 'postgres' | awk '{print $1}')
+
+#if [ -n "$DBS" ]; then
+#    echo "$SERVICE ima aktivne baze , provjeri destinaciju...."
+    #echo "$DBS"
+    #exit 0
+#fi
+
+echo "==== Prvo ZFS snapshot zatečenog stanja ===="
+echo ""
+echo "Obaram CT:"
+docker stop $SERVICE
+RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
+
+if [ $? -eq 1 ]; then
+    echo "$SERVICE CT nije pokrenut idem dalje......"
+fi
+if [ "$RUNNING" == "true" ]; then
+    echo "$SERVICE CT je pokrenut, provjeri...."
+    exit 0
+fi
+
+sudo zfs snapshot -r $ZDATASET@$TIME
+sudo zfs hold restore $ZDATASET@$TIME
+echo "Kreiran snapshot:"
+sudo zfs list $ZDATASET@$TIME | awk 'NR==2' | awk '{print $1}'
+echo ""
+echo "Startam CT:"
+docker start $SERVICE
+sleep 10
+
+
+echo "==== Prebacujem SQL dump sa G-DRIVE===="
+
+[ -d $SQLDEST  ] || sudo mkdir -p $SQLDEST && sudo chown docker:docker $SQLDEST
+rm -f $SQLDEST/$LASTDUMP
+rclone copy gdrive_bout:$ORIGIN/$LASTDUMP $SQLDEST
+cd $SQLDEST
+gunzip  $SQLDEST/$LASTDUMP
+echo "Raspakovao $SQLDEST/${LASTDUMP%.*}"
+echo "Restore u toku ....."
+sleep 5
+docker exec -i  $SERVICE psql -U postgres <  $SQLDEST/${LASTDUMP%.*}
+echo "Završio, brišem $SQLDEST/${LASTDUMP%.*}"
+rm -rf $SQLDEST/${LASTDUMP%.*}
+exit

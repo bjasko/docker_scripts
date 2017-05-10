@@ -1,0 +1,45 @@
+#!/bin/bash
+PATH=/opt/vim/bin:/opt/python2/bin:/opt/green/bin:/opt/docker/bin:/opt/boot/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/bin:/usr/sbin:/opt/boot/bin
+
+
+SERVICE=$1
+ZPOOL=green
+ZDATASET=$ZPOOL/$SERVICE
+ZQUOTA=50G
+VOLUME_BASE=/data/$SERVICE
+DOCKER_PORT=$2
+TIME=$(date +%Y%m%d%H%M%S)
+SQLDEST=$VOLUME_BASE/sqlbackups
+
+
+echo "==== Pravim SQL dumpall servera===="
+
+[ -d $SQLDEST  ] || sudo mkdir -p $SQLDEST && sudo chown docker:docker $SQLDEST
+docker exec  $SERVICE pg_dumpall -U postgres | gzip -c > $SQLDEST/postgresql.$TIME.sql.gz
+echo "napravio $SQLDEST/postgresql.$TIME.sql.gz"
+
+echo "==== Prebacujem $SQLDEST/postgresql.$TIME.sql.gz na G-DRIVE"
+
+rclone copy $SQLDEST  gdrive_bout:$SERVICE
+echo "Prebacio:"
+rclone lsl gdrive_bout:$SERVICE  | head -1 | awk '{print $4}'
+
+echo "====Pravim ZFS snapshot $ZDATASET -a ===="
+echo "Obaram CT:"
+docker stop $SERVICE
+RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
+
+if [ $? -eq 1 ]; then
+    echo "$SERVICE CT nije pokrenut idem dalje......"
+fi
+if [ "$RUNNING" == "true" ]; then
+    echo "$SERVICE CT je već pokrenut, provjeri...."
+    exit 0
+fi
+sudo zfs snapshot -r $ZDATASET@$TIME
+echo "Kreiran snapshot:"
+sudo zfs list $ZDATASET@$TIME
+echo "Startam CT:"
+docker start $SERVICE
+
+exit
