@@ -53,4 +53,11 @@ sudo zfs list $ZDATASET@$TIME
 echo "Startam CT:"
 docker start $SERVICE
 
+echo "==== Provjeravam ZFS snapshot ===="
+
+
+sudo zfs clone $ZDATASET@$TIME  $ZDATASET-clone
+du -sh /$ZDATASET-clone
+sudo zfs unmount $ZDATASET-clone
+sudo zfs destroy $ZDATASET-clone
 exit
