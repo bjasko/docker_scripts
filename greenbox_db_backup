@@ -1,15 +1,16 @@
 #!/bin/bash
 PATH=/opt/vim/bin:/opt/python2/bin:/opt/green/bin:/opt/docker/bin:/opt/boot/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/bin:/usr/sbin:/opt/boot/bin
 
-
-SERVICE=$1
-ZPOOL=green
+SERVICE=$1 # service name aka organisation
+ZPOOL=green # ZFS pool
 ZDATASET=$ZPOOL/$SERVICE
-ZQUOTA=50G
-VOLUME_BASE=/data/$SERVICE
-DOCKER_PORT=$2
+ZQUOTA=50G # ZFS dataset quota
+VOLUME_BASE=/data/$SERVICE # ZFS mountpoint
+DOCKER_PORT=$2 # docker port to expose postgresql
 TIME=$(date +%Y%m%d%H%M%S)
-SQLDEST=$VOLUME_BASE/sqlbackups
+SQLDEST=$VOLUME_BASE/sqlbackups # destination for sql backups
+REMOTE=gdrive_bout # remote rclone provider
+ZFS_KEEP=+30 # delete older than (n)  ZFS snapshots
 
 
 echo "==== Pravim SQL dumpall servera===="
@@ -20,11 +21,12 @@ echo "napravio $SQLDEST/postgresql.$TIME.sql.gz"
 
 echo "==== Prebacujem $SQLDEST/postgresql.$TIME.sql.gz na G-DRIVE"
 
-rclone copy $SQLDEST  gdrive_bout:$SERVICE
+rclone copy $SQLDEST  $REMOTE:$SERVICE
 echo "Prebacio:"
-rclone lsl gdrive_bout:$SERVICE  | head -1 | awk '{print $4}'
+rclone lsl $REMOTE:$SERVICE  | head -1 | awk '{print $4}'
 
 echo "====Pravim ZFS snapshot $ZDATASET -a ===="
+
 echo "Obaram CT:"
 docker stop $SERVICE
 RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
@@ -36,8 +38,17 @@ if [ "$RUNNING" == "true" ]; then
     echo "$SERVICE CT je već pokrenut, provjeri...."
     exit 0
 fi
+
+echo "==== Čistim stare snapshote ===="
+
+for S in `zfs list -t snapshot -o name -S creation | grep $ZDATASET | tail -n $ZFS_KEEP`;
+do
+  sudo zfs destroy -vr $S
+done
+
 sudo zfs snapshot -r $ZDATASET@$TIME
 echo "Kreiran snapshot:"
+
 sudo zfs list $ZDATASET@$TIME
 echo "Startam CT:"
 docker start $SERVICE
