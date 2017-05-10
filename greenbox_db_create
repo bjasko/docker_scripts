@@ -22,6 +22,7 @@ RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
 PCHECK=$(docker ps | grep -ic $DOCKER_PORT)
 ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
 
+
 if [ $? -eq 1 ]; then
     echo "$SERVICE CT nije pokrenut idem dalje......"
 fi
@@ -43,6 +44,14 @@ if [ $ZCHECK -gt 0 ]; then
 else
     echo "ZFS dataset $ZDATASET ne postoji, kreiram ga ....."
     sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
+fi
+
+ZMOUNTCHECK=$(zfs get mounted $ZDATASET | awk 'NR==2' | awk '{print $2}')
+if [ $ZMOUNTCHECK == "mounted" ]; then
+    echo "$ZDATASET je mountan nastavljam...."
+else
+    echo "$ZDATASET izgleda nije mountan, izlazim ....."
+    exit
 fi
 
 echo "Sve izgleda OK, kreiram CT  $SERVICE"
