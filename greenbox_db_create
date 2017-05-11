@@ -61,7 +61,6 @@ docker run --name $SERVICE -itd \
 -v $VOLUME_BASE/etc:/etc/postgresql \
 -v $VOLUME_BASE/log:/var/log/postgresql \
 -e 'PG_PASSWORD=password' \
--e 'REPLICATION_USER=repluser' -e 'REPLICATION_PASS=password' \
 -p $DOCKER_PORT:5432 \
 $DOCKER_IMAGE
 

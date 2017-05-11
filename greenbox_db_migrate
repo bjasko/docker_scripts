@@ -15,7 +15,7 @@ fi
 SERVICE=$1
 SQLDEST=/tmp/$SERVICE-migrate
 REMOTE=gdrive_bout
-DBS=`docker exec -i $SERVICE  psql -lt  -U postgres | egrep -v 'template[01]' | egrep -v 'postgres' | awk '{print $1}')`
+#DBS=`docker exec -i $SERVICE  psql -lt  -U postgres | egrep -v 'template[01]' | egrep -v 'postgres' | awk '{print $1}')`
 RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
 
 if [ $? -eq 1 ]; then
