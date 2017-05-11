@@ -21,8 +21,8 @@ ZDATASET=$ZPOOL/$SERVICE
 
 #if [ -n "$DBS" ]; then
 #    echo "$SERVICE ima aktivne baze , provjeri destinaciju...."
-    #echo "$DBS"
-    #exit 0
+#echo "$DBS"
+#exit 0
 #fi
 
 echo "==== Prvo ZFS snapshot zatečenog stanja ===="

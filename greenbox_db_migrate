@@ -1,10 +1,38 @@
+#! /bin/bash
+PATH=/opt/vim/bin:/opt/python2/bin:/opt/green/bin:/opt/docker/bin:/opt/boot/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/bin:/usr/sbin:/opt/boot/bin
+
+# help
+if [ $# -lt 1 ]
+then
+    echo "argumenti su:   ./greenbox_db_create  [DOCKER_CT] [PORT]"
+    echo "npr: ./greenbox_db_create F18-db-rudze-dobavljaci 54325"
+    echo "remote execute"
+    echo "ssh  docker@srv1bout bash  -s -- < greenbox_db_create  f18-demo4 54322"
+    exit
+fi
+
 SERVICE=$1
+SQLDEST=/tmp/$SERVICE-migrate
+REMOTE=gdrive_bout
+RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
+
+if [ $? -eq 1 ]; then
+    echo "$SERVICE CT nije pokrenut, popravi......"
+    exit
+fi
+if [ "$RUNNING" == "true" ]; then
+    echo "$SERVICE CT je postoji idem dalje...."
+fi
 
 
+[ -d $SQLDEST  ] || sudo mkdir -p $SQLDEST && sudo chown docker:docker $SQLDEST
 
-
-docker cp $PWD/migrate $SERVICE:/tmp
-for i in `docker exec -it $SERVICE ls -l  /tmp/migrate | awk '{print $9}'` ;
-do docker exec -it $SERVICE pg_restore -U postgres  -C -d postgres /tmp/migrate/$i
+rclone copy $REMOTE:$SERVICE/migrate  $SQLDEST
+docker cp $SQLDEST  $SERVICE:/tmp
+docker exec -it $SERVICE psql -d postgres -U postgres -f  $SQLDEST/migrate/useraccts.sql
+for i in `docker exec -it $SERVICE ls -l  $SQLDEST/migrate/*.backup | awk '{print $9}'` ;
+do docker exec -it $SERVICE pg_restore -U postgres  -C -d postgres $i
 done
+#docker exec -it $SERVICE rm -rf SERVICE_TMP
+#rm -rf $SQLDEST
 exit

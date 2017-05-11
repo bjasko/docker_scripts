@@ -43,7 +43,7 @@ echo "==== Čistim stare snapshote ===="
 
 for S in `zfs list -t snapshot -o name -S creation | grep $ZDATASET | tail -n $ZFS_KEEP`;
 do
-  sudo zfs destroy -vr $S
+    sudo zfs destroy -vr $S
 done
 
 sudo zfs snapshot -r $ZDATASET@$TIME
