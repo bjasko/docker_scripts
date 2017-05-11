@@ -15,7 +15,7 @@ SERVICE=$1
 ZPOOL=green
 ZDATASET=$ZPOOL/$SERVICE
 ZQUOTA=50G
-VOLUME_BASE=/data/$SERVICE
+VOLUME_BASE=/green/$SERVICE
 DOCKER_IMAGE=bjasko/postgresql
 DOCKER_PORT=$2
 RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
@@ -55,7 +55,7 @@ else
 fi
 
 echo "Sve izgleda OK, kreiram CT  $SERVICE"
-
+docker rm -f $SERVICE
 docker run --name $SERVICE -itd \
 -v $VOLUME_BASE/lib:/var/lib/postgresql \
 -v $VOLUME_BASE/etc:/etc/postgresql \

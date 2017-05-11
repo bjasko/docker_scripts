@@ -4,16 +4,18 @@ PATH=/opt/vim/bin:/opt/python2/bin:/opt/green/bin:/opt/docker/bin:/opt/boot/bin:
 # help
 if [ $# -lt 1 ]
 then
-    echo "argumenti su:   ./greenbox_db_create  [DOCKER_CT] [PORT]"
-    echo "npr: ./greenbox_db_create F18-db-rudze-dobavljaci 54325"
+    echo "argumenti su:   ./greenbox_db_migrate [SERVICE]"
+    echo "npr: ./greenbox_db_migrate bringout.db.out.ba"
     echo "remote execute"
-    echo "ssh  docker@srv1bout bash  -s -- < greenbox_db_create  f18-demo4 54322"
+    echo "ssh docker@vultr1.out.ba  greenbox_db_migrate bringout.db.out.ba"
+    echo "na remote-u moramo imati gdive_bout:bringout.db.out.ba/migrate popunjen dumpovima i useraccountima"
     exit
 fi
 
 SERVICE=$1
 SQLDEST=/tmp/$SERVICE-migrate
 REMOTE=gdrive_bout
+DBS=`docker exec -i $SERVICE  psql -lt  -U postgres | egrep -v 'template[01]' | egrep -v 'postgres' | awk '{print $1}')`
 RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
 
 if [ $? -eq 1 ]; then
@@ -29,10 +31,11 @@ fi
 
 rclone copy $REMOTE:$SERVICE/migrate  $SQLDEST
 docker cp $SQLDEST  $SERVICE:/tmp
-docker exec -it $SERVICE psql -d postgres -U postgres -f  $SQLDEST/migrate/useraccts.sql
-for i in `docker exec -it $SERVICE ls -l  $SQLDEST/migrate/*.backup | awk '{print $9}'` ;
-do docker exec -it $SERVICE pg_restore -U postgres  -C -d postgres $i
+docker exec -i  $SERVICE psql -d postgres -U postgres -f  $SQLDEST/migrate/useraccts.sql
+for i in `docker exec -i $SERVICE ls -l  $SQLDEST/migrate/*.backup | awk '{print $9}'` ;
+do docker exec -i $SERVICE pg_restore -U postgres  -C -d postgres $i
 done
-#docker exec -it $SERVICE rm -rf SERVICE_TMP
-#rm -rf $SQLDEST
+echo "Importovao podatke i kreirao baze $DBS"
+docker exec -i $SERVICE rm -rf $SQLDEST
+rm -rf $SQLDEST
 exit
