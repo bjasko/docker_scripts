@@ -1,0 +1,10 @@
+SERVICE=$1
+
+
+
+
+docker cp $PWD/migrate $SERVICE:/tmp
+for i in `docker exec -it $SERVICE ls -l  /tmp/migrate | awk '{print $9}'` ;
+do docker exec -it $SERVICE pg_restore -U postgres  -C -d postgres /tmp/migrate/$i
+done
+exit

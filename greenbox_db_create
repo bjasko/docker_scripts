@@ -46,8 +46,8 @@ else
     sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
 fi
 
-ZMOUNTCHECK=$(zfs get mounted $ZDATASET | awk 'NR==2' | awk '{print $2}')
-if [ $ZMOUNTCHECK == "mounted" ]; then
+ZMOUNTCHECK=$(zfs get mounted $ZDATASET | awk 'NR==2' | awk '{print $3}')
+if [ $ZMOUNTCHECK == "yes" ]; then
     echo "$ZDATASET je mountan nastavljam...."
 else
     echo "$ZDATASET izgleda nije mountan, izlazim ....."
@@ -64,5 +64,11 @@ docker run --name $SERVICE -itd \
 -e 'REPLICATION_USER=repluser' -e 'REPLICATION_PASS=password' \
 -p $DOCKER_PORT:5432 \
 $DOCKER_IMAGE
+
+sleep 5
+echo "==== init sql role/user===="
+echo  "create role xtrole;" | docker exec -i $SERVICE  psql -U postgres
+echo  "create role admin password 'boutpgmin' login in group xtrole;" | docker exec -i $SERVICE  psql -U postgres
+
 
 exit
