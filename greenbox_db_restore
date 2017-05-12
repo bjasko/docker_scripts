@@ -11,12 +11,12 @@ fi
 
 ORIGIN=$2
 SERVICE=$1
-VOLUME_BASE=/data/$SERVICE
+VOLUME_BASE=/green/db/$SERVICE/F18
 TIME=$(date +%Y%m%d%H%M%S)
 SQLDEST=$VOLUME_BASE/sqlbackups
 LASTDUMP=$(rclone lsl gdrive_bout:$ORIGIN | head -1 | awk '{print $4}')
-ZPOOL=green
-ZDATASET=$ZPOOL/$SERVICE
+ZPOOL=green/db
+ZDATASET=$ZPOOL/$SERVICE/F18
 #DBS=$(docker exec -i $SERVICE  psql -lt  -U postgres | egrep -v 'template[01]' | egrep -v 'postgres' | awk '{print $1}')
 
 #if [ -n "$DBS" ]; then

@@ -15,7 +15,6 @@ fi
 SERVICE=$1
 SQLDEST=/tmp/$SERVICE-migrate
 REMOTE=gdrive_bout
-#DBS=`docker exec -i $SERVICE  psql -lt  -U postgres | egrep -v 'template[01]' | egrep -v 'postgres' | awk '{print $1}')`
 RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
 
 if [ $? -eq 1 ]; then
@@ -31,11 +30,11 @@ fi
 
 rclone copy $REMOTE:$SERVICE/migrate  $SQLDEST
 docker cp $SQLDEST  $SERVICE:/tmp
-docker exec -i  $SERVICE psql -d postgres -U postgres -f  $SQLDEST/migrate/useraccts.sql
-for i in `docker exec -i $SERVICE ls -l  $SQLDEST/migrate/*.backup | awk '{print $9}'` ;
+docker exec -i  $SERVICE psql -d postgres -U postgres -f  $SQLDEST/useraccts.sql
+for i in `docker exec -i $SERVICE ls -l  $SQLDEST/*.backup | awk '{print $9}'` ;
 do docker exec -i $SERVICE pg_restore -U postgres  -C -d postgres $i
 done
-echo "Importovao podatke i kreirao baze $DBS"
+echo "Importovao podatke i kreirao baze"
 docker exec -i $SERVICE rm -rf $SQLDEST
 rm -rf $SQLDEST
 exit
