@@ -41,7 +41,6 @@ fi
 
 if [ $POOLCHECK -gt 0 ]; then
     echo "ZFS dataset $ZPOOL postoji,nastavljam ....."
-
 else
     echo "ZFS dataset $ZPOOL ne postoji, kreiram ga ....."
     sudo zfs create -o recordsize=8K -o primarycache=metadata -o logbias=throughput $ZPOOL
@@ -74,7 +73,10 @@ docker run --name $SERVICE -itd \
 -p $DOCKER_PORT:5432 \
 $DOCKER_IMAGE
 
-sleep 5
+
+# čekam da se DB servis podigne
+(docker logs -f $SERVICE &) | grep -q "database system is ready to accept connections"
+
 echo "==== init sql role/user===="
 echo  "create role xtrole;" | docker exec -i $SERVICE  psql -U postgres
 echo  "create role admin password 'boutpgmin' login in group xtrole;" | docker exec -i $SERVICE  psql -U postgres
