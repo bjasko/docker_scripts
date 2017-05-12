@@ -12,16 +12,16 @@ then
 fi
 
 SERVICE=$1
-ZPOOL=green
-ZDATASET=$ZPOOL/$SERVICE
+ZPOOL=green/db
+ZDATASET=$ZPOOL/$SERVICE/F18
 ZQUOTA=50G
-VOLUME_BASE=/green/$SERVICE
+VOLUME_BASE=/$ZDATASET
 DOCKER_IMAGE=bjasko/postgresql
 DOCKER_PORT=$2
 RUNNING=$(docker inspect --format="{{ .State.Running }}" $SERVICE 2> /dev/null)
 PCHECK=$(docker ps | grep -ic $DOCKER_PORT)
 ZCHECK=$(sudo zfs list | grep -ic $ZDATASET)
-
+POOLCHECK=$(sudo zfs list | grep -ic $ZPOOL)
 
 if [ $? -eq 1 ]; then
     echo "$SERVICE CT nije pokrenut idem dalje......"
@@ -38,11 +38,21 @@ else
     echo "CT port $DOCKER_PORT nije zauzet nastavljam ....."
 fi
 
+
+if [ $POOLCHECK -gt 0 ]; then
+    echo "ZFS dataset $ZPOOL postoji,nastavljam ....."
+
+else
+    echo "ZFS dataset $ZPOOL ne postoji, kreiram ga ....."
+    sudo zfs create -o recordsize=8K -o primarycache=metadata -o logbias=throughput $ZPOOL
+fi
+
 if [ $ZCHECK -gt 0 ]; then
     echo "ZFS dataset $ZDATASET postoji, provjeri, izlazim ....."
     exit
 else
     echo "ZFS dataset $ZDATASET ne postoji, kreiram ga ....."
+    sudo zfs create   $ZPOOL/$SERVICE
     sudo zfs create -o quota=$ZQUOTA -o mountpoint=$VOLUME_BASE  $ZDATASET
 fi
 
